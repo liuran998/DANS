@@ -44,7 +44,6 @@ class Filter(nn.Module):
 
 
 
-        # self.bn_layers = nn.BatchNormalization()
 
     def forward(self,input):
         film_alpha_layer1 = self.film_alpha_layers1(input)
@@ -79,7 +78,6 @@ class Filter2(nn.Module):
                                                nn.LeakyReLU(0.2, inplace=True))
 
 
-        # self.bn_layers = nn.BatchNormalization()
 
     def forward(self,input):
         film_alpha_layer1_g2 = self.film_alpha_layers1(input)
@@ -107,11 +105,6 @@ class Discriminator(nn.Module):
         #self.aux_layer = nn.Sequential(nn.Linear(32, 2), nn.Softmax(dim =1))
         self.aux_layer  = nn.Sequential(nn.Linear(32,16),nn.Linear(16,8),nn.Linear(8,1), nn.Sigmoid())
 
-       #0 : Sigmoid + Softmax sharing same MLP
-       #1 : 2 Sigmoid sharing same MLP -->change to BCE
-       #2 : 2 Sigmoid sharing different MLP --> change to BCE
-       #3 : Consider making adv/aux layer more complex
-       
 
         
 
@@ -211,40 +204,6 @@ class Generator2(nn.Module):
         oupt = self.output(MLP2)
 
         return oupt, filt2_l2_regularization
-
-#
-# class Generator2(nn.Module):
-#     def __init__(self, args, model_path=None):
-#         super(Generator2, self).__init__()
-#
-#         def block(in_feat, out_feat, normalize=True):
-#             layers = [nn.Linear(in_feat, out_feat)]
-#             layers.append(nn.LeakyReLU(0.2, inplace=True))
-#             if normalize:
-#                 layers.append(nn.BatchNorm1d(out_feat, 0.8))
-#
-#             return layers
-#
-#         self.genMLP = nn.Sequential(
-#             *block(args.node_embed_size, args.node_embed_size, normalize=False),
-#             *block(args.node_embed_size, args.node_embed_size),
-#             nn.Linear(args.node_embed_size, args.node_embed_size), #batchnorm avoided for Gen output
-#             nn.Tanh()
-#             #nn.Sigmoid()
-#
-#         )
-#
-#     def forward(self, pos_head, pos_rel):
-#
-#         z = torch.normal(mean=0, std=0.01, size =pos_rel.shape).detach().cuda()
-#         #x = pos_rel
-#         x = torch.mul(pos_head,pos_rel)
-#         y = x + z
-#         oupt = self.genMLP(y)
-#         return oupt
-
-
-
 
 class WayGAN2(object):
     def __init__(self, args, model_path=None):
