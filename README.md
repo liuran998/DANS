@@ -11,4 +11,15 @@ This code is lastly tested with:
 * cudatoolkit=11.3 -c pytorch
 * pytorch-sparse -c pyg
 
-## Parameter Setting
+## Data
+We provide three datasets: WN18RR, NELL-995 and UMLS.
+
+**The format of input training data**
+Train/Validation/Test 
+*Each line: source_node relation target_node
+
+Entities & Relations Dictionary
+*Each line: ID Name
+
+## Basic Usage
+python main.py
