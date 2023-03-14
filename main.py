@@ -49,15 +49,12 @@ def train(Tensor,LongTensor, adversarial_loss, auxiliary_loss, distmult_loss, ge
         # Adversarial ground truths
         valid = Variable(Tensor(real_data[0].size(0), 1).fill_(1.0), requires_grad=False)
 
-        # Configure input
-        # real_data = Variable(real_data.type(Tensor))
 
         pos_head_batch = real_data[0].cuda().detach()
         pos_rel_batch = real_data[1].cuda().detach()
         inverse_relation_batch = 1/pos_rel_batch
         pos_tail_batch = real_data[2].cuda().detach()
-        # args.dis_batch_loss = 0
-        # args.gen_batch_loss = 0
+
 
         # Train Generator
         if epoch < args.freeze_epoch :
@@ -67,14 +64,12 @@ def train(Tensor,LongTensor, adversarial_loss, auxiliary_loss, distmult_loss, ge
             for dis_idx in range(args.epoch_g):
                 args.generator_optimizer.zero_grad()
 
-                # args.gen.train()
                 fake_tail1,filt_l2_regularization_tail = args.gen(pos_head_batch)
                 fake_head1,filt_l2_regularization_head = args.gen(pos_tail_batch)
 
                 l2_regularization = (filt_l2_regularization_tail  + filt_l2_regularization_head)/2
 
                 # Loss measures generator's ability to fool the discriminator
-                # args.dis.eval()
                 validity1, _ =args.dis(fake_tail1)
                 g_loss_tail = adversarial_loss(validity1, valid)
                 validity2, _ =args.dis(fake_head1)
@@ -102,8 +97,6 @@ def train(Tensor,LongTensor, adversarial_loss, auxiliary_loss, distmult_loss, ge
                 l2_regularization = (filt_l2_regularization_tail + filt_l2_regularization_head)/2
 
                 # Loss measures generator's ability to fool the discriminator
-                # args.dis.eval()
-
                 validity1, _ =args.dis(fake_tail2)
                 g_loss_tail = adversarial_loss(validity1, valid)
                 validity2, _ =args.dis(fake_head2)
@@ -145,13 +138,11 @@ def train(Tensor,LongTensor, adversarial_loss, auxiliary_loss, distmult_loss, ge
                 real_pred1, real_aux1 = args.dis(pos_head_batch)
                 d_real_loss1 = adversarial_loss(real_pred1, valid)
 
-                # Loss for fake tail1/2
-                ##OurModel : Predict fake as 0 and fake as 0 or 2
+                # Loss for fake tail
                 fake_pred, fake_aux = args.dis(combinedFake_tail.detach())
                 d_fake_loss = (adversarial_loss(fake_pred, fakelabels) + auxiliary_loss(fake_aux, fake_classlabels)) / 2
 
-                # Loss for fake head1/2
-                ##OurModel : Predict fake as 0 and fake as 0 or 2
+                # Loss for fake head
                 fake_pred2, fake_aux2 = args.dis(combinedFake_head.detach())
                 d_fake_loss_1 = (adversarial_loss(fake_pred2, fakelabels) + auxiliary_loss(fake_aux2, fake_classlabels)) / 2
 
@@ -173,11 +164,7 @@ def train(Tensor,LongTensor, adversarial_loss, auxiliary_loss, distmult_loss, ge
     fake_tail1 = torch.empty(0, args.node_embed_size).cuda()
     fake_tail2 = torch.empty(0, args.node_embed_size).cuda()
     fake_head2 = torch.empty(0, args.node_embed_size).cuda()
-    # args.RGCN_loss = 0
     for i in range(args.gen_fake_ratio):
-        # z = Variable(Tensor(np.random.normal(0, 1, (train_data.relabeled_edges.shape[0], train_data.relabeled_edges.shape[1]))))
-        # pos_head, pos_rel, pos_tail = model.pos_embedding(entity_embedding, train_data.relabeled_edges.long())
-            # fake_o = args.gen(pos_head.cuda(), pos_rel.cuda())
         fake_o,_ = args.gen(pos_head.cuda())
         fake_s,_ = args.gen(pos_tail.cuda())
         fake_o2,_ = args.gen2(pos_head.cuda(), pos_rel.cuda())
@@ -190,20 +177,11 @@ def train(Tensor,LongTensor, adversarial_loss, auxiliary_loss, distmult_loss, ge
 
     #Feed Fake triplet + random negative triplet to DistMult
     RGCN_loss = model.score_loss(entity_embedding,fake_tail1,fake_tail2, fake_head1,fake_head2 , train_data.samples, train_data.labels, train_data.relabeled_edges) + reg_ratio * model.reg_loss(entity_embedding)
-    # args.DisMult_Loss += RGCN_loss.detach().cpu().numpy().item()
-    # print('RGCN_loss', RGCN_loss)
-    # print('generator_loss', generator_loss)
-
     args.optimizer.zero_grad()
     RGCN_loss.backward()
     torch.nn.utils.clip_grad_norm_(model.parameters(), args.grad_norm)
     args.optimizer.step()
-
-    # distmult = RGCN_loss.detach().cpu().numpy().item()
-    # distmult_loss.append(distmult)
-    # tqdm.write("Total epoch: {}, DisMult Loss: {}.".
-    #            format(epoch, RGCN_loss))
-
+    
     genloss = args.gen_batch_loss/(len(train_ldr)*args.epoch_g)
     gen_loss.append(genloss)
     tqdm.write("Total epoch: {}, Gen Loss: {}.".
@@ -269,12 +247,8 @@ def main(args):
 
     best_mrr = 0
 
-    #Extract triplets and ID , actually we dont need ID file
-    #Then stitch train/valid/test to get all triplets (151442)
     entity2id, relation2id, train_triplets, valid_triplets, test_triplets_o = load_data('./data/UMLS')
     all_triplets = torch.LongTensor(np.concatenate((train_triplets, valid_triplets, test_triplets_o)))
-    #test_graph gives data pulse that holds edge_index,edge_type, edge_norm
-    #edge_norm = normalized degrees , if more edge - lower contribution
     test_graph = build_test_graph(len(entity2id), len(relation2id), train_triplets)
     valid_triplets = torch.LongTensor(valid_triplets)
     test_triplets = torch.LongTensor(test_triplets_o)
@@ -315,13 +289,6 @@ def main(args):
     args.discriminator_optimizer = torch.optim.Adam(args.dis.parameters(), lr=args.dis_lr, betas=(args.b1, args.b2))
     args.generator_optimizer = torch.optim.Adam(args.gen.parameters(), lr=args.gen_lr, betas=(args.b1, args.b2))
     args.generator_optimizer2 = torch.optim.Adam(args.gen2.parameters(), lr=args.gen_lr, betas=(args.b1, args.b2))
-
-    # args.generator_optimizer = torch.optim.SGD(args.gen.parameters(), lr=args.gen_lr, momentum=0.9)
-    # args.discriminator_optimizer = torch.optim.SGD(args.dis.parameters(), lr=args.dis_lr, momentum=0.9)
-
-    # args.generator_optimizer = torch.optim.RMSprop(args.gen.parameters(), lr=args.gen_lr)
-    # args.discriminator_optimizer = torch.optim.RMSprop(args.dis.parameters(), lr=args.dis_lr)
-
     args.optimizer = torch.optim.Adam(model.parameters(), lr=args.rgcn_lr)
 
     #Load pretrained RGCN
@@ -340,10 +307,6 @@ def main(args):
     Tensor = torch.cuda.FloatTensor if cuda else torch.FloatTensor
     LongTensor = torch.cuda.LongTensor if cuda else torch.LongTensor
 
-    # all_ones = torch.ones(32, dtype=torch.float32).cuda()
-    # all_zeros = torch.zeros(32, dtype=torch.float32).cuda()
-
-
     valid_mrr_plot = []
     dis_loss = []
     gen_loss = []
@@ -356,9 +319,6 @@ def main(args):
         model.cuda()
 
     for epoch in trange(1, (args.n_epochs + 1), desc='Epochs', position=0):
-        # args.optimizer.zero_grad()
-
-
         RGCN_loss = train(Tensor,LongTensor, adversarial_loss, auxiliary_loss, distmult_loss, gen_loss, gen_loss2, dis_loss, epoch, train_triplets, model, use_cuda, batch_size=args.graph_batch_size,  split_size=args.graph_split_size,
             negative_sample=args.negative_sample, reg_ratio = args.regularization, num_entities=len(entity2id), num_relations=len(relation2id))
 
@@ -418,4 +378,3 @@ if __name__ == '__main__':
 
     print(args)
     main(args)
-    #print(args)
