@@ -8,7 +8,6 @@ parser.add_argument("--evaluate-every", type=int, default=100)
 parser.add_argument("--gpu", type=int, default=-1)
 parser.add_argument('--test_batch_size', type=int, default=10)
 parser.add_argument('--node_embed_size', type=int, default=100)
-#parser.add_argument("--trigger_times", type=int, default=20)
 
 parser.add_argument("--freeze_epoch", type=int, default=100000)
 
@@ -29,8 +28,6 @@ parser.add_argument("--b2", type=float, default=0.999, help="adam: decay of firs
 
 #Gen
 parser.add_argument('--label_smooth', type=float, default=0)
-# parser.add_argument("--gen_ratio", type=float, default=0.1) #[ 0.1 , 0.5 , 1]
-# parser.add_argument('--lambda_gen', type=float, default=1e-5, help='Lambda in Generator Loss')
 parser.add_argument("--grad-norm", type=float, default=1.0)
 parser.add_argument("--gen_fake_ratio", type=int, default=5)
 parser.add_argument("--epoch_g", type=int, default=1)
