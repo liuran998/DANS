@@ -10,6 +10,8 @@ This code is lastly tested with:
 * torchaudio==0.11.0 
 * cudatoolkit=11.3 -c pytorch
 * pytorch-sparse -c pyg
+* tqdm
+* torch_geometric
 
 ## Data
 We provide three datasets: WN18RR, NELL-995 and UMLS.
