@@ -247,7 +247,7 @@ def main(args):
 
     best_mrr = 0
 
-    entity2id, relation2id, train_triplets, valid_triplets, test_triplets_o = load_data('./data/UMLS')
+    entity2id, relation2id, train_triplets, valid_triplets, test_triplets_o = load_data('./data/NELL-995')
     all_triplets = torch.LongTensor(np.concatenate((train_triplets, valid_triplets, test_triplets_o)))
     test_graph = build_test_graph(len(entity2id), len(relation2id), train_triplets)
     valid_triplets = torch.LongTensor(valid_triplets)
@@ -292,7 +292,7 @@ def main(args):
     args.optimizer = torch.optim.Adam(model.parameters(), lr=args.rgcn_lr)
 
     #Load pretrained RGCN
-    checkpoint = torch.load('pretrained_best_mrr_model.pth')
+    checkpoint = torch.load(''./Pretrained/pretrained_best_mrr_model_NELL.pth'')
     model.load_state_dict(checkpoint['state_dict'])
     epoch = checkpoint['epoch']
     print('pretrain epoch', epoch)
