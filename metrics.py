@@ -27,15 +27,6 @@ def mrr_mr_hitk(scores, target, x= 1, y = 5, k=10, z =100):
     target_rank = torch.nonzero(find_target)[0, 0] + 1
     return 1 / target_rank, target_rank, int(target_rank <= x), int(target_rank <= y), int(target_rank <= k), int(target_rank <= z)
 
-# def other_metrics(embedding,valid_data):
-#     s = embedding[valid_data[:, 0]].cuda()
-#     rel_embed = args.rel_embed
-#     r = nn.Embedding.from_pretrained(rel_embed, freeze=True).float().cuda()
-#     o = embedding[valid_data[:, 2]].cuda()
-#     score = torch.sum(s * r * o, dim=-1)
-
-
-
 def calc_mrr( test_data, n_ent, heads, tails, embedding, rel_embed,filt=True):
     mrr_tot = 0
     mr_tot = 0
@@ -44,15 +35,11 @@ def calc_mrr( test_data, n_ent, heads, tails, embedding, rel_embed,filt=True):
     hit10_tot = 0
     hit100_tot = 0
     count = 0
-    #Divide the h,r,t into batches , each batchsize=10
     for batch_s, batch_r, batch_t in batch_by_size(args.test_batch_size, *test_data):
         batch_size = batch_s.size(0)
-        #Batch size of 10 for h,r,t , each repeated 40943 times per row embedding
         rel_var = Variable(batch_r.unsqueeze(1).expand(batch_size, n_ent).cuda())
         src_var = Variable(batch_s.unsqueeze(1).expand(batch_size, n_ent).cuda())
         dst_var = Variable(batch_t.unsqueeze(1).expand(batch_size, n_ent).cuda())
-        #all_var = Variable(torch.arange(0, n_ent).unsqueeze(0).expand(batch_size, n_ent)
-        #                   .type(torch.LongTensor).cuda(), volatile=True)
         with torch.no_grad():
             #10 rows , each from 0 to 40942
             all_var = Variable(torch.arange(0, n_ent).unsqueeze(0).expand(batch_size, n_ent).cuda())   # resolve a warning
@@ -72,7 +59,6 @@ def calc_mrr( test_data, n_ent, heads, tails, embedding, rel_embed,filt=True):
                 b = a._nnz()
 
                 if tails[(s.item(), r.item())]._nnz() > 1:
-                    # for pythorch 0.4.1 or above
                     c = dst_scores[t]
                     tmp = dst_scores[t].item()
                     dst_scores += tails[(s.item(), r.item())].cuda() * 1e30
@@ -106,8 +92,6 @@ def calc_mrr( test_data, n_ent, heads, tails, embedding, rel_embed,filt=True):
             hit100_tot += hit100
 
             count += 2
-    # logging.info('Test_MRR=%f, Test_MR=%f, Test_H@1=%f,Test_H@5=%f, Test_H@10=%f', mrr_tot / count, mr_tot / count,
-    #              hit1_tot / count, hit5_tot / count, hit10_tot / count)
     tqdm.write("Test_MRR: {}, Test_MR: {}, Test_H@1: {}, Test_H@5: {}, Test_H@10: {}, Test_H@100: {}.".
                format(mrr_tot / count, mr_tot / count, hit1_tot / count, hit5_tot / count, hit10_tot / count, hit100_tot / count))
 
