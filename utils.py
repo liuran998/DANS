@@ -105,23 +105,12 @@ def generate_sampled_graph_and_labels(triplets, batch, split_size, num_entity, n
     """
 
     edges = sample_edge_uniform(len(triplets), batch)
-
-    # Select sampled edges
     edges = triplets[edges]
     src, rel, dst = edges.transpose()
-    #edges = indexes of src,dst to its unique entities
     uniq_entity, edges = np.unique((src, dst), return_inverse=True)
     src, dst = np.reshape(edges, (2, -1))
     relabeled_edges = np.stack((src, rel, dst)).transpose()
-
-    # Negative sampling, either replace h or t of relabeled_edges
-    # samples = 30k pos and 30k neg samples , labels = corresponding label 1 or 0
-    # Add in fake generated embedding from GAN + extend 0s for labels
     samples, labels = negative_sampling(relabeled_edges, len(uniq_entity), negative_rate)
-
-    # further split graph, only half of the edges will be used as graph
-    # structure, while the rest half is used as unseen positive samples
-    # Only 15k out of 30k batch used as sampling
     split_size = int(batch * split_size)
     graph_split_ids = np.random.choice(np.arange(batch),
                                        size=split_size, replace=False)
@@ -130,7 +119,7 @@ def generate_sampled_graph_and_labels(triplets, batch, split_size, num_entity, n
     dst = torch.tensor(dst[graph_split_ids], dtype = torch.long).contiguous()
     rel = torch.tensor(rel[graph_split_ids], dtype = torch.long).contiguous()
 
-    # Create bi-directional graph (15k X2)
+    # Create bi-directional graph
     src, dst = torch.cat((src, dst)), torch.cat((dst, src))
     rel = torch.cat((rel, rel + num_rels))
 
@@ -182,14 +171,11 @@ def heads_tails(n_ent, all_data):
 
     all_src, all_rel, all_dst = all_data.transpose().tolist()
 
-    #Unique h,r and r,t in total dataset
-    #Lesser indicates many 1-N and N-1 relationships
     heads = defaultdict(lambda: set())
     tails = defaultdict(lambda: set())
     for s, r, t in zip(all_src, all_rel, all_dst):
         tails[(s, r)].add(t)
         heads[(t, r)].add(s)
-    #Number of t for unique h,r
     heads_sp = {}
     tails_sp = {}
     for k in tails.keys():
@@ -225,86 +211,3 @@ class ManyDatasetsInOne(object):
 
     def __len__(self):
         return len(self.pos_head)
-
-
-# # return MRR (filtered), and Hits @ (1, 3, 10)
-# def calc_mrr(epoch, embedding, w, test_triplets, all_triplets, hits=[]):
-#     with torch.no_grad():
-#
-#         num_entity = len(embedding)
-#
-#         ranks_s = []
-#         ranks_o = []
-#
-#         head_relation_triplets = all_triplets[:, :2]
-#         tail_relation_triplets = torch.stack((all_triplets[:, 2], all_triplets[:, 1])).transpose(0, 1)
-#
-#         for test_triplet in test_triplets:
-#             # Perturb object
-#             subject = test_triplet[0]
-#             relation = test_triplet[1]
-#             object_ = test_triplet[2]
-#
-#             subject_relation = test_triplet[:2]
-#             delete_index = torch.sum(head_relation_triplets == subject_relation, dim=1)
-#             delete_index = torch.nonzero(delete_index == 2).squeeze()
-#
-#             delete_entity_index = all_triplets[delete_index, 2].view(-1).numpy()
-#             perturb_entity_index = np.array(list(set(np.arange(num_entity)) - set(delete_entity_index)))
-#             perturb_entity_index = torch.from_numpy(perturb_entity_index)
-#             perturb_entity_index = torch.cat((perturb_entity_index, object_.view(-1)))
-#
-#             emb_ar = embedding[subject] * w[relation]
-#             emb_ar = emb_ar.view(-1, 1, 1)
-#
-#             emb_c = embedding[perturb_entity_index]
-#             emb_c = emb_c.transpose(0, 1).unsqueeze(1)
-#
-#             out_prod = torch.bmm(emb_ar, emb_c)
-#             score = torch.sum(out_prod, dim=0)
-#             score = torch.sigmoid(score)
-#
-#             target = torch.tensor(len(perturb_entity_index) - 1)
-#             ranks_s.append(sort_and_rank(score, target))
-#
-#             # Perturb subject
-#             object_ = test_triplet[2]
-#             relation = test_triplet[1]
-#             subject = test_triplet[0]
-#
-#             object_relation = torch.tensor([object_, relation])
-#             delete_index = torch.sum(tail_relation_triplets == object_relation, dim=1)
-#             delete_index = torch.nonzero(delete_index == 2).squeeze()
-#
-#             delete_entity_index = all_triplets[delete_index, 0].view(-1).numpy()
-#             perturb_entity_index = np.array(list(set(np.arange(num_entity)) - set(delete_entity_index)))
-#             perturb_entity_index = torch.from_numpy(perturb_entity_index)
-#             perturb_entity_index = torch.cat((perturb_entity_index, subject.view(-1)))
-#
-#             emb_ar = embedding[object_] * w[relation]
-#             emb_ar = emb_ar.view(-1, 1, 1)
-#
-#             emb_c = embedding[perturb_entity_index]
-#             emb_c = emb_c.transpose(0, 1).unsqueeze(1)
-#
-#             out_prod = torch.bmm(emb_ar, emb_c)
-#             score = torch.sum(out_prod, dim=0)
-#             score = torch.sigmoid(score)
-#
-#             target = torch.tensor(len(perturb_entity_index) - 1)
-#             ranks_o.append(sort_and_rank(score, target))
-#
-#         ranks_s = torch.cat(ranks_s)
-#         ranks_o = torch.cat(ranks_o)
-#
-#         ranks = torch.cat([ranks_s, ranks_o])
-#         ranks += 1  # change to 1-indexed
-#
-#         mrr = torch.mean(1.0 / ranks.float())
-#         print("Total epoch:{}, MRR (filtered): {:.6f}".format(epoch, mrr.item()))
-#
-#         for hit in hits:
-#             avg_count = torch.mean((ranks <= hit).float())
-#             print("Total epoch:{}, Hits (filtered) @ {}: {:.6f}".format(epoch, hit, avg_count.item()))
-#
-#     return mrr.item()
