@@ -222,7 +222,7 @@ class WayGAN2(object):
         filt = Filter(self.args, model_path)
         self.filt = filt.cuda()
 
-        filt2 = Filter(self.args, model_path)
+        filt2 = Filter2(self.args, model_path)
         self.filt2 = filt2.cuda()
 
         #self.discriminator = discriminator
