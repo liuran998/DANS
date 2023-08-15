@@ -30,7 +30,7 @@ The following command trains and validates a DistMult model on wn18rr dataset wi
 ``python main.py --dataset wn18rr 
 --scoring_function DistMult
 --node_embed_size 100 
---dimension 100``
+--dimension 100``<br />
 The following command trains and validates a RotatE model on wn18rr dataset with 50D in node_embed_size & dimension:<br />
 ``python main.py --dataset wn18rr 
 --scoring_function RotatE
