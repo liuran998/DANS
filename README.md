@@ -28,11 +28,11 @@ python main.py --dataset <dataset_name> --scoring_function <function_number> --n
 ### As an example:
 The following command trains and validates a DistMult model on wn18rr dataset with 100D in node_embed_size & dimension:<br />
 ``python main.py --dataset wn18rr 
---scoring_function DistMult
+--scoring_function 1
 --node_embed_size 100 
 --dimension 100``
 <br />The following command trains and validates a RotatE model on wn18rr dataset with 50D in node_embed_size & dimension:<br />
 ``python main.py --dataset wn18rr 
---scoring_function RotatE
+--scoring_function 2
 --node_embed_size 50 
 --dimension 50``
