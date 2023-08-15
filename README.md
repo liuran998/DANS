@@ -35,7 +35,7 @@ The following command trains and validates a DistMult model on wn18rr dataset wi
 ``python main.py --dataset wn18rr 
 --scoring_function 2
 --node_embed_size 50 
---dimension 50``
+--dimension 50``<br />
 
-## Due to size constraint, NELL-995 and WN18RR has been excluded.
+*** Due to size constraint, NELL-995 and WN18RR has been excluded.
 
