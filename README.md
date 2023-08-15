@@ -14,7 +14,7 @@ This code is lastly tested with:
 * torch_geometric
 
 ## Data
-We provide three datasets: WN18RR, NELL-995 and UMLS.
+We provide three datasets: WN18RR[^1], NELL-995[^2] and UMLS.
 
 ### The format of input training data
 ### Train/Validation/Test 
@@ -37,5 +37,5 @@ The following command trains and validates a DistMult model on wn18rr dataset wi
 --node_embed_size 50 
 --dimension 50``<br />
 
-* Due to size constraint, NELL-995 and WN18RR has been excluded.
+[^1]: Due to size constraint, NELL-995 and WN18RR has been excluded.
 
