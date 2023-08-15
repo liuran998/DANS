@@ -36,3 +36,6 @@ The following command trains and validates a DistMult model on wn18rr dataset wi
 --scoring_function 2
 --node_embed_size 50 
 --dimension 50``
+
+### Due to size constraint, NELL-995 and WN18RR has been excluded.
+
