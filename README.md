@@ -25,7 +25,8 @@ We provide three datasets: WN18RR, NELL-995 and UMLS.
 
 ## Basic Usage
 python main.py --dataset <dataset_name> --scoring_function <function_number> --node_embed_size <D> --dimension <D> <br /><br />
-### As an example, the following command trains and validates a DistMult model on wn18rr dataset with 100D in node_embed_size & dimension:
+### As an example:
+The following command trains and validates a DistMult model on wn18rr dataset with 100D in node_embed_size & dimension:
 ``python main.py --dataset wn18rr 
 --scoring_function DistMult
 --node_embed_size 100 
