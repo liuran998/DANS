@@ -1,7 +1,7 @@
 # PyTorch DANS (Link Prediction)
 
 PyTorch implementation of DANS (Diversified and Adaptive Negative Sampling
-on Knowledge Graph). The code is sparsely optimized with torch_geometric library, which is builded based on PyTorch.
+on Knowledge Graph). The code is sparsely optimized with torch_geometric library, which is built based on PyTorch.
 
 ## Evironment Setting
 This code is lastly tested with:
@@ -24,4 +24,6 @@ We provide three datasets: WN18RR, NELL-995 and UMLS.
 * Each line: ID Name
 
 ## Basic Usage
-python main.py
+python main.py --dataset <dataset_name> --scoring_function <function_number> --node_embed_size <D> --dimension <D>
+As an example, the following command trains and validates a DistMult model on wn18rr dataset with 100D in node_embed_size & dimension:
+python main.py --dataset wn18rr --scoring_function DistMult--node_embed_size 100 --dimension 100
